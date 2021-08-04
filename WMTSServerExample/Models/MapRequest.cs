@@ -21,6 +21,30 @@ namespace WMTSServerWeb
         public string Format { get; set; } = "image/png";//	请求瓦片的格式
         public int Width { get; set; } //宽
         public int Height { get; set; }//高
-        public string SRS { get; set; } = "EPSG:4326";//空间参考系统
+        public string Authority
+        {
+            get
+            {
+                var authority = "EPSG";
+                if (TileMatrixSet != null && TileMatrixSet.Contains(":"))
+                {
+                    authority = TileMatrixSet.Substring(0, TileMatrixSet.IndexOf(':') - 1);
+                }
+                return authority;
+            }
+        }
+        public int SRID
+        {
+            get
+            {
+                var srid = 4326;
+                if (TileMatrixSet != null && TileMatrixSet.Contains(":"))
+                {
+                    var identifier = TileMatrixSet[(TileMatrixSet.IndexOf(':') + 1)..];
+                    srid = Int32.Parse(identifier);
+                }
+                return srid;
+            }
+        }
     }
 }

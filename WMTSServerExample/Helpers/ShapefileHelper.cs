@@ -89,8 +89,8 @@ namespace WMTSServer.Helpers
                 {
                     //SRID = 4326,
                     //TargetSRID = 900913,
-                     CoordinateTransformation = pos,
-                     ReverseCoordinateTransformation = neg,
+                    CoordinateTransformation = pos,
+                    ReverseCoordinateTransformation = neg,
                     Style = (VectorStyle)data.Style,
                     SmoothingMode = SmoothingMode.AntiAlias,
                     IsQueryEnabled = true,
@@ -102,7 +102,7 @@ namespace WMTSServer.Helpers
         }
         public static Map Default()
         {
-            Map map = new Map(new Size(500,500));
+            Map map = new Map(new Size(500, 500));
 
             IDictionary<string, LayerData> dict = Nyc;
             var ctFac = new ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory();

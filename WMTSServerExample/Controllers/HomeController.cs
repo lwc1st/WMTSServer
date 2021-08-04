@@ -16,7 +16,7 @@ namespace WMTSServerExample.Controllers
 
         public IActionResult Index()
         {
-            return Redirect("/WMTS?TileMatrix=10&TileCol=301&TileRow=384&Width=1600&Height=900");
+            return Redirect("/WMTS?TileMatrix=10&TileCol=301&TileRow=384&Width=1600&Height=900&TileMatrixSet=EPSG:3587");
         }
 
 

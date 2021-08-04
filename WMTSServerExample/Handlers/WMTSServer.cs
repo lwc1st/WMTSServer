@@ -16,7 +16,7 @@ using System;
 using System.Threading.Tasks;
 using static SharpMap.Web.Wms.Capabilities;
 using SharpMap;
-using WMTSServer.Helpers;
+using TileGrid;
 
 namespace Handlers
 {
@@ -47,6 +47,10 @@ namespace Handlers
             {
                 request.Format = context.Request.Query[nameof(request.Format)];
             }
+            if (context.Request.Query.ContainsKey(nameof(request.TileMatrixSet)))
+            {
+                request.TileMatrixSet = context.Request.Query[nameof(request.TileMatrixSet)];
+            }
             if (context.Request.Query.ContainsKey(nameof(request.TileCol)) && int.TryParse(context.Request.Query[nameof(request.TileCol)], out var tileCol))
             {
                 request.TileCol = tileCol;
@@ -67,8 +71,20 @@ namespace Handlers
             {
                 request.Height = height;
             }
-            Envelope bbox = GetBoundingBoxInLatLngWithMargin(request.TileCol, request.TileRow, request.TileMatrix);
+            SRS srs = SRS.Epsg4326;
+            if (request.SRID == 3587)
+            {
+                srs = SRS.Epsg3857;
+            }
+            if (request.SRID == 4490)
+            {
+                srs = SRS.Epsg4490;
+            }
+            var gs = GridSet.Create(srs,YAxisSchema.Xyz);
+            var tileBBox = gs.GetTileBBox(request.TileCol, request.TileRow, request.TileMatrix);
+            var bbox = GetBoundingBoxInLatLngWithMargin(tileBBox);
             Map map = ShapefileHelper.Spherical(new Size(request.Width, request.Height));
+            map.SRID = request.SRID;
             map.ZoomToBox(bbox);
             var mapImage = map.GetMap();
             using var ms = new MemoryStream();
@@ -79,7 +95,6 @@ namespace Handlers
             context.Response.ContentType = GetEncoderInfo(request.Format).MimeType;
             await context.Response.Body.WriteAsync(buffer, 0, buffer.Length);
             await context.Response.Body.FlushAsync();
-
         }
 
         public static ImageCodecInfo GetEncoderInfo(String mimeType)
@@ -89,7 +104,13 @@ namespace Handlers
                     return encoder;
             return null;
         }
-
+        private static Envelope GetBoundingBoxInLatLngWithMargin(double[] tileBBox)
+        {
+            Envelope bbox = new Envelope();
+            bbox.ExpandToInclude(tileBBox[0], tileBBox[1]);
+            bbox.ExpandToInclude(tileBBox[2], tileBBox[3]);
+            return bbox;
+        }
         private static Envelope GetBoundingBoxInLatLngWithMargin(int tileX, int tileY, int zoom)
         {
             System.Drawing.Point px1 = new System.Drawing.Point((tileX * 256), (tileY * 256));
